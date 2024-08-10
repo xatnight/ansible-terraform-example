@@ -1,0 +1,25 @@
+{% if ssh_listen_address is defined %}
+ListenAddress {{ ssh_listen_address }}
+{% else %}
+#ListenAddress 0.0.0.0
+{% endif %}
+
+AllowAgentForwarding no
+LoginGraceTime 30s
+MaxAuthTries 5
+MaxSessions 10
+PasswordAuthentication no
+PermitRootLogin no
+PrintMotd no
+PubkeyAuthentication yes
+X11Forwarding no
+
+{% if sftp_disabled %}
+#Subsystem sftp internal-sftp
+{% else %}
+Subsystem sftp internal-sftp
+{% endif %}
+
+{% if allowed_users is defined %}
+AllowUsers {{ allowed_users | join(" ")}}
+{% endif %}

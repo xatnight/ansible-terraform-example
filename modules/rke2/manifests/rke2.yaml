@@ -1,0 +1,18 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rke2-ingress-nginx
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    controller:
+      config:
+        use-proxy-protocol: ${use_proxy_protocol}
+        use-http2: true
+      extraArgs:
+        enable-ssl-passthrough: true
+      metrics:
+        enabled: ${ingress_metrics}
+        serviceMonitor:
+          enabled: ${ingress_metrics}

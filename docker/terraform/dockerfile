@@ -1,0 +1,46 @@
+FROM alpine:latest
+
+ARG TERRAFORM_BINARY_VERSION
+ARG ARGOCD_BINARY_VERSION
+
+RUN apk update && apk upgrade
+RUN apk cache clean
+
+RUN apk add --no-cache \
+  ansible \
+  curl \
+  gcompat \
+  git \
+  idn2-utils \
+  jq \
+  kubectl \
+  openssh \
+  py3-pip \
+  python3 \
+  unzip
+
+WORKDIR /tmp
+
+RUN ( curl -sLo terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_BINARY_VERSION}/terraform_${TERRAFORM_BINARY_VERSION}_linux_amd64.zip" && \
+      unzip terraform.zip && \
+      rm terraform.zip && \
+      mv ./terraform /usr/local/bin/terraform \
+    ) && terraform --version
+
+RUN ( mkdir -p "$HOME/.terraform.d/plugins" && \
+      curl -sSL "https://github.com/radekg/terraform-provisioner-ansible/releases/download/v2.5.0/terraform-provisioner-ansible-linux-amd64_v2.5.0" --output "$HOME/.terraform.d/plugins/terraform-provisioner-ansible_v2.5.0" && \
+      chmod +x "$HOME/.terraform.d/plugins/terraform-provisioner-ansible_v2.5.0" \
+    )
+
+RUN ( curl -sSL "https://github.com/argoproj/argo-cd/releases/download/v${ARGOCD_BINARY_VERSION}/argocd-linux-amd64" --output argocd-linux-amd64 && \
+      chmod 555 ./argocd-linux-amd64 && \
+      mv ./argocd-linux-amd64 /usr/local/bin/argocd \
+    )
+
+WORKDIR /
+
+COPY gitlab-terraform.sh /usr/bin/gitlab-terraform
+RUN chmod +x /usr/bin/gitlab-terraform
+
+# Override ENTRYPOINT since hashicorp/terraform uses `terraform`
+ENTRYPOINT []

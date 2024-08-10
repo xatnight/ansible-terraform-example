@@ -1,0 +1,27 @@
+FROM alpine:latest
+
+ARG PACKER_BINARY_VERSION
+
+RUN apk update && apk upgrade
+RUN apk cache clean
+
+RUN apk add --no-cache \
+  curl \
+  openssh \
+  unzip
+
+WORKDIR /tmp
+
+RUN ( curl -sLo packer.zip "https://releases.hashicorp.com/packer/${PACKER_BINARY_VERSION}/packer_${PACKER_BINARY_VERSION}_linux_amd64.zip" && \
+      unzip packer.zip && \
+      rm packer.zip && \
+      mv ./packer /usr/local/bin/packer \
+    ) && packer --version
+
+RUN adduser packer --disabled-password
+
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod u+x /usr/local/bin/entrypoint.sh
+
+USER packer
+CMD ["entrypoint.sh"]

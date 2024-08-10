@@ -1,0 +1,16 @@
+---
+- name: Delete install user
+  ansible.builtin.user:
+    name: install
+    state: absent
+    remove: true
+
+- name: Remove install group
+  ansible.builtin.group:
+    name: install
+    state: absent
+
+- name: Cleanup cloud-init sudoers
+  ansible.builtin.file:
+    path: /etc/sudoers.d/90-cloud-init-users
+    state: absent

@@ -1,0 +1,5 @@
+---
+allowed_users:
+  - myUser
+sftp_disabled: false
+sudo_nopassword: true

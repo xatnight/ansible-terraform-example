@@ -1,0 +1,4 @@
+---
+rke2_fqdn: "{{ cluster_name }}.{{ dns_domain }}"
+rke2_ha: false
+rke2_registry_url: https://{{ rke2_fqdn }}:9345

@@ -1,0 +1,60 @@
+---
+- name: Manage myUser group
+  ansible.builtin.group:
+    name: myUser
+    state: present
+
+- name: Manage myUser account
+  ansible.builtin.user:
+    name: myUser
+    state: present
+    groups: ["adm", "sudo"]
+    password: "{{ myUser_pw }}"
+    append: true
+    create_home: true
+    group: myUser
+    shell: /bin/bash
+
+- name: Allow myUser sudo without password
+  community.general.sudoers:
+    name: myUser
+    user: myUser
+    commands:
+      - ALL
+    nopassword: "{{ sudo_nopassword }}"
+
+- name: Manage ssh keys for myUser
+  ansible.posix.authorized_key:
+    user: myUser
+    state: present
+    key: "{{ item }}"
+  with_file:
+    - id_ed25519.pub
+
+- name: Disable default sftp
+  ansible.builtin.replace:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^Subsystem"
+    replace: "#Subsystem"
+
+- name: Manage ssh config
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: "/etc/ssh/sshd_config.d/01-custom.conf"
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - Restart ssh
+  when: ansible_os_family == "Debian"
+
+- name: Test sshd config
+  ansible.builtin.command:
+    cmd: /usr/sbin/sshd -t
+  register: result
+  changed_when: result.rc == 0
+  failed_when: result.rc == 255
+
+- name: Run cleanup
+  ansible.builtin.include_tasks:
+    file: cleanup.yml

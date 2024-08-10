@@ -1,0 +1,29 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US.utf8
+  keyboard:
+    layout: de
+  ssh:
+    install-server: true
+    allow-pw: true
+    disable_root: true
+    ssh_quiet_keygen: true
+    allow_public_ssh_keys: true
+  packages:
+    - qemu-guest-agent
+    - sudo
+  storage:
+    layout:
+      name: lvm
+  user-data:
+    package_update: true
+    package_upgrade: true
+    timezone: Europe/Berlin
+    users:
+      - name: install
+        passwd: $6$nomQ2cjp5h.tNbeo$7ZB6MUh5868FHBT0/q7eStbIK7F6HZPVV7W7ASIIp8DQGrRgbh03c.yzwQdr0SNk.OfbFFk68uN3X.bugwD5i0
+        groups: [adm, sudo]
+        lock_passwd: false
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        shell: /bin/bash

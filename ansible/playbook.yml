@@ -1,0 +1,47 @@
+- name: Manage Linux Hosts
+  become: true
+  become_method: sudo
+  vars:
+    ansible_user: terraform
+    ufw_host:
+      http:
+        action: allow
+        comment: http
+        direction: in
+        port: 80
+        protocol: tcp
+      https:
+        action: allow
+        comment: https
+        direction: in
+        port: 443
+        protocol: tcp
+      k8s-api:
+        action: allow
+        comment: k8s-api
+        direction: in
+        port: 6443
+        protocol: tcp
+      k8s-registration:
+        action: allow
+        comment: k8s-registration
+        direction: in
+        port: 9345
+        protocol: tcp
+  vars_files:
+    - vault.yml
+  gather_facts: true
+  hosts: all
+  tasks:
+    - name: Load user role
+      include_role:
+          name: user
+    - name: Load timezone role
+      include_role:
+          name: timezone
+    - name: Load ufw role
+      include_role:
+          name: ufw
+    - name: Load rke2 role
+      include_role:
+          name: rke2

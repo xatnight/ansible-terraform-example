@@ -1,0 +1,8 @@
+---
+ufw_default:
+  ssh:
+    action: allow
+    comment: ssh
+    direction: in
+    port: 22
+    protocol: tcp

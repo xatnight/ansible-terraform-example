@@ -1,0 +1,48 @@
+---
+variables:
+  CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
+  TERRAFORM_VERSION: 1.9.4
+  ARGOCD_VERSION: 2.12.0
+
+default:
+  tags:
+    - docker
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+stages:
+  - test
+  - build
+  - test-image
+  - deploy
+
+build:
+  stage: build
+  tags:
+    - shell
+  script:
+    - docker build --build-arg TERRAFORM_BINARY_VERSION=$TERRAFORM_VERSION --build-arg ARGOCD_BINARY_VERSION=$ARGOCD_VERSION --pull -t $CONTAINER_TEST_IMAGE .
+    - docker push $CONTAINER_TEST_IMAGE
+
+test-image:
+  stage: test-image
+  tags:
+    - shell
+  script:
+    - docker pull $CONTAINER_TEST_IMAGE
+    - docker run $CONTAINER_TEST_IMAGE sh -c "gitlab-terraform version && argocd version --client && ansible --version && kubectl version --client"
+
+release:
+  stage: deploy
+  tags:
+    - shell
+  script:
+    - docker pull $CONTAINER_TEST_IMAGE
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+    - docker push $CONTAINER_RELEASE_IMAGE
+  only:
+    - main

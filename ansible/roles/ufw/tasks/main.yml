@@ -1,0 +1,49 @@
+---
+- name: Set dictionary
+  ansible.builtin.set_fact:
+    ufw_dictionary: "{{ ufw_default | combine(ufw_host | default({})) | combine(ufw_group | default({})) }}"
+
+- name: Ensure ufw is installed
+  ansible.builtin.package:
+    name:
+      - ufw
+    state: present
+
+- name: Ensure no obsolete rules are enabled
+  community.general.ufw:
+    state: reset
+
+- name: Disable logging
+  community.general.ufw:
+    logging: "off"
+
+- name: Add default deny incoming
+  community.general.ufw:
+    default: reject
+    direction: incoming
+
+- name: Add default allow outgoing
+  community.general.ufw:
+    default: allow
+    direction: outgoing
+
+- name: Add rules for each host
+  community.general.ufw:
+    comment: "{{ item.value.comment }}"
+    direction: "{{ item.value.direction }}"
+    from_ip: "{{ item.value.from_ip | default(omit) }}"
+    port: "{{ item.value.port }}"
+    proto: "{{ item.value.protocol }}"
+    rule: "{{ item.value.action }}"
+    to_ip: "{{ item.value.to_ip | default(omit) }}"
+  with_dict: "{{ ufw_dictionary }}"
+
+- name: Cleanup ufw files
+  ansible.builtin.command:
+    cmd: find /etc/ufw -type f -name "*.rules.*" -delete
+  register: result
+  changed_when: result.rc == 0
+
+- name: Enable ufw
+  community.general.ufw:
+    state: enabled

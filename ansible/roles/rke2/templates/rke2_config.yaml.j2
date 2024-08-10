@@ -1,0 +1,11 @@
+---
+profile: "cis-1.23"
+{% if rke2_ha == true %}
+token: {{ rke2_token }}
+{% if ansible_hostname != primary_hostname %}
+server: {{ rke2_registry_url }}
+{% endif %}
+{% endif %}
+tls-san:
+  - "{{ rke2_fqdn }}"
+  - 127.0.0.1
